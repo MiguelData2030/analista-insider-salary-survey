@@ -365,25 +365,92 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* SECCIÓN 2: VARIABLES MODELADAS */}
-            <div className="glass-card p-10 space-y-8">
+            {/* SECCIÓN 2: METODOLOGÍA ANALÍTICA (VARIABLES MODELADAS) */}
+            <div className="glass-card p-10 space-y-10">
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <Database className="text-blue-500" />
-                <h3 className="text-2xl font-black italic tracking-tighter uppercase">Variables luego de Modeladas</h3>
+                <h3 className="text-2xl font-black italic tracking-tighter uppercase">Metodología Analítica e Indicadores</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Indicador 1: Sectores */}
                 <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
-                  <p className="font-black text-blue-500 text-sm uppercase tracking-[0.2em] group-hover:text-cyan-400">ingresos_totales_cop</p>
-                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Tipo: Numérico Decimal</p>
-                  <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                    Métrica maestra. Sumatoria de salario y compensaciones normalizada a Pesos Colombianos usando TRM estática de $3,670.20.
+                  <div className="flex justify-between items-start">
+                    <Briefcase className="text-blue-500 group-hover:text-white transition-colors" size={24} />
+                    <span className="text-[8px] font-black bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full uppercase tracking-tighter">Agregación Top 10</span>
+                  </div>
+                  <h4 className="font-black text-xs uppercase tracking-widest text-[#a3a3a3]">Sectores de Alto Valor</h4>
+                  <p className="text-[10px] text-[#737373] leading-relaxed">
+                    **Lógica**: Se agrupa la base de datos por `industria` y se calcula el `mean()` de `ingresos_totales_cop`.
+                    **Variable Fuente**: `What industry do you work in?`.
+                    **Propósito**: Identificar los sectores económicos con mayor competitividad salarial global.
                   </p>
                 </div>
+
+                {/* Indicador 2: Experiencia */}
                 <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
-                  <p className="font-black text-blue-500 text-sm uppercase tracking-[0.2em] group-hover:text-cyan-400">ciudad_limpia</p>
-                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Tipo: String Categoría</p>
+                  <div className="flex justify-between items-start">
+                    <Clock className="text-blue-500 group-hover:text-white transition-colors" size={24} />
+                    <span className="text-[8px] font-black bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full uppercase tracking-tighter">Correlación Lineal</span>
+                  </div>
+                  <h4 className="font-black text-xs uppercase tracking-widest text-[#a3a3a3]">Experiencia vs Ingresos</h4>
+                  <p className="text-[10px] text-[#737373] leading-relaxed">
+                    **Lógica**: Mapeo de dispersión (Scatter Plot) entre `exp_total` (convertida a entero) y el `salario`.
+                    **Variable Fuente**: `Years of professional experience overall`.
+                    **Propósito**: Visualizar la maduración salarial y detectar "outliers" de ingresos tempranos.
+                  </p>
+                </div>
+
+                {/* Indicador 3: Academia */}
+                <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
+                  <div className="flex justify-between items-start">
+                    <GraduationCap className="text-blue-500 group-hover:text-white transition-colors" size={24} />
+                    <span className="text-[8px] font-black bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full uppercase tracking-tighter">Impacto Educativo</span>
+                  </div>
+                  <h4 className="font-black text-xs uppercase tracking-widest text-[#a3a3a3]">Correlación Académica</h4>
+                  <p className="text-[10px] text-[#737373] leading-relaxed">
+                    **Lógica**: Agrupación por `educacion` y cálculo de promedios para determinar el ROI educativo.
+                    **Variable Fuente**: `Highest level of education completed`.
+                    **Propósito**: Medir cómo los títulos especializados incrementan el valor de mercado.
+                  </p>
+                </div>
+
+                {/* Indicador 4: Género */}
+                <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
+                  <div className="flex justify-between items-start">
+                    <PieIcon className="text-blue-500 group-hover:text-white transition-colors" size={24} />
+                    <span className="text-[8px] font-black bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full uppercase tracking-tighter">Distribución Demográfica</span>
+                  </div>
+                  <h4 className="font-black text-xs uppercase tracking-widest text-[#a3a3a3]">Composición del Mercado</h4>
+                  <p className="text-[10px] text-[#737373] leading-relaxed">
+                    **Lógica**: Conteo de frecuencias relativas sobre la variable `genero`.
+                    **Variable Fuente**: `Gender`.
+                    **Propósito**: Analizar la representatividad y posibles brechas de participación en la muestra.
+                  </p>
+                </div>
+
+                {/* Indicador 5: TreeMap Global */}
+                <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group md:col-span-2 lg:col-span-2">
+                  <div className="flex justify-between items-start">
+                    <Globe className="text-blue-500 group-hover:text-white transition-colors" size={24} />
+                    <span className="text-[8px] font-black bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full uppercase tracking-tighter shadow-lg shadow-blue-500/20">Geografía de Riqueza v3.10</span>
+                  </div>
+                  <h4 className="font-black text-xs uppercase tracking-widest text-blue-500">Explorador de Concentración Global (TreeMap)</h4>
                   <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                    Atributo jerárquico unificado para el TreeMap Global. Permite comparar la riqueza entre hubs tecnológicos mundiales.
+                    **Lógica**: Algoritmo de mosaico jerárquico que procesa `ciudad_limpia`, calculando el sueldo promedio (`value`) y el tamaño de la muestra empírica (`count` / N).
+                    <br /><br />
+                    **Variables**: `City` (Origen) ➔ `ciudad_limpia` (Modelada).
+                    <br />
+                    **Construcción**: Se filtran los Top 10 Hubs Globales para garantizar nitidez y se añade la métrica **N** para dar validez estadística de nivel Senior a cada promedio visualizado.
+                  </p>
+                </div>
+
+                {/* Variables Maestras */}
+                <div className="bg-blue-600/5 p-8 rounded-3xl border border-blue-500/20 space-y-4 hover:border-blue-500/40 transition-all group">
+                  <p className="font-black text-blue-500 text-sm uppercase tracking-[0.2em] group-hover:text-cyan-400 italic underline">ingresos_totales_cop</p>
+                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Métrica Maestra Multivisa</p>
+                  <p className="text-[10px] text-[#737373] leading-relaxed">
+                    Normalización financiera: `Annual Salary` + `Additional Compensation` unificados a Pesos Colombianos mediante TRM estática de $3,670.20.
                   </p>
                 </div>
               </div>
