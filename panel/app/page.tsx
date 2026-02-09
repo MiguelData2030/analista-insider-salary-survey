@@ -5,7 +5,7 @@ import {
   Users, DollarSign, Briefcase, TrendingUp, Database,
   ShieldAlert, Rocket, GraduationCap, Clock,
   ArrowRightLeft, FileText, Settings, HeartPulse, PieChart as PieIcon,
-  CheckCircle2, AlertCircle, Terminal, BookOpen, Map as MapIcon, Globe, Building2
+  CheckCircle2, AlertCircle, Terminal, BookOpen, Map as MapIcon, Globe, Building2, List
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -34,6 +34,7 @@ const KpiCard = ({ title, value, icon: Icon, description }: { title: string, val
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
+    whileHover={{ y: -5 }}
     className="glass-card p-6 flex flex-col gap-2 border-white/5 hover:border-blue-500/30 transition-all cursor-default"
   >
     <div className="flex justify-between items-start">
@@ -88,23 +89,29 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'documentation'>('dashboard');
 
   useEffect(() => {
-    fetch('/data/processed_data.json')
-      .then(res => res.json())
-      .then((d: SurveyRecord[]) => setData(d))
-      .catch(err => console.error("Error loading data:", err));
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/data/processed_data.json');
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
+    };
+    fetchData();
   }, []);
 
   const aggregated = useMemo(() => {
     if (data.length === 0) return null;
 
     const total = data.length;
-    const avg = data.reduce((acc, curr) => acc + curr.ingresos_totales_cop, 0) / total;
+    const avg = data.reduce((acc, curr) => acc + (Number(curr.ingresos_totales_cop) || 0), 0) / total;
 
     const indStats: Record<string, { sum: number, count: number }> = {};
     data.forEach(curr => {
       const ind = curr.industria || "Otras Industrias";
       if (!indStats[ind]) indStats[ind] = { sum: 0, count: 0 };
-      indStats[ind].sum += curr.ingresos_totales_cop;
+      indStats[ind].sum += (Number(curr.ingresos_totales_cop) || 0);
       indStats[ind].count += 1;
     });
     const industries = Object.entries(indStats)
@@ -119,7 +126,7 @@ export default function Dashboard() {
       let edu = curr.educacion || "N/A";
       if (edu.length > 20) edu = edu.substring(0, 18) + "..";
       if (!eduStats[edu]) eduStats[edu] = { sum: 0, count: 0 };
-      eduStats[edu].sum += curr.ingresos_totales_cop;
+      eduStats[edu].sum += (Number(curr.ingresos_totales_cop) || 0);
       eduStats[edu].count += 1;
     });
     const educationData = Object.entries(eduStats)
@@ -137,19 +144,18 @@ export default function Dashboard() {
 
     const scatter = data.slice(0, 600).map(x => ({
       exp: parseInt(x.exp_total) || 0,
-      salary: Math.round(x.ingresos_totales_cop / 1e6),
+      salary: Math.round((Number(x.ingresos_totales_cop) || 0) / 1e6),
       industry: x.industria
     }));
 
-    // Data for USA Map (Simulated states for the higher level requirement)
     const usaStatesData = [
-      { name: "Texas", value: 367, color: "#1d4ed8" },
-      { name: "California", value: 412, color: "#2563eb" },
-      { name: "New York", value: 395, color: "#3b82f6" },
-      { name: "Florida", value: 320, color: "#60a5fa" },
-      { name: "Washington", value: 388, color: "#2563eb" },
-      { name: "Arizona", value: 310, color: "#93c5fd" },
-      { name: "Massachusetts", value: 405, color: "#1e40af" }
+      { name: "Texas", value: 367 },
+      { name: "California", value: 412 },
+      { name: "New York", value: 395 },
+      { name: "Florida", value: 320 },
+      { name: "Washington", value: 388 },
+      { name: "Arizona", value: 310 },
+      { name: "Massachusetts", value: 405 }
     ];
 
     return {
@@ -243,7 +249,7 @@ export default function Dashboard() {
               </div>
 
               <div className="glass-card p-8 space-y-6">
-                <h3 className="font-black text-sm tracking-[0.3em] uppercase text-[#737373] flex items-center gap-2"><PieIcon size={16} className="text-blue-500" /> Distribución por Género</h3>
+                <h3 className="font-black text-sm tracking-[0.3em] uppercase text-[#737373] flex items-center gap-2"><PieIcon size={16} className="text-blue-500" /> Composición del Mercado</h3>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -279,35 +285,25 @@ export default function Dashboard() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                <div className="lg:col-span-2 relative h-[400px] glass-card bg-black/40 flex items-center justify-center p-8">
-                  {/* SVG Representativo de Mapa USA por Estados */}
-                  <svg viewBox="0 0 1000 600" className="w-full h-full opacity-80 group">
-                    <path d="M100,200 L300,200 L300,400 L100,400 Z" fill="#1e3a8a" stroke="#fff" strokeWidth="2" className="hover:fill-blue-500 cursor-pointer transition-all" />
+                <div className="lg:col-span-2 relative h-[400px] glass-card bg-black/40 flex items-center justify-center p-8 overflow-hidden">
+                  <svg viewBox="0 0 1000 600" className="w-full h-full opacity-80">
+                    <path d="M100,200 L300,200 L300,400 L100,400 Z" fill="#1e3a8a" stroke="#fff" strokeWidth="2" />
                     <text x="180" y="310" fill="white" fontSize="24" fontWeight="bold">TEXAS</text>
-                    <path d="M300,100 L600,100 L600,300 L300,300 Z" fill="#2563eb" stroke="#fff" strokeWidth="2" className="hover:fill-blue-400 cursor-pointer transition-all" />
+                    <path d="M300,100 L600,100 L600,300 L300,300 Z" fill="#2563eb" stroke="#fff" strokeWidth="2" />
                     <text x="400" y="210" fill="white" fontSize="24" fontWeight="bold">CALIFORNIA</text>
-                    <path d="M600,300 L900,300 L900,500 L600,500 Z" fill="#1d4ed8" stroke="#fff" strokeWidth="2" className="hover:fill-blue-500 cursor-pointer transition-all" />
+                    <path d="M600,300 L900,300 L900,500 L600,500 Z" fill="#1d4ed8" stroke="#fff" strokeWidth="2" />
                     <text x="700" y="410" fill="white" fontSize="24" fontWeight="bold">FLORIDA</text>
-                    <text x="20" y="580" fill="#737373" fontSize="12" fontStyle="italic">Visualización Geoespacial Pro v3.4</text>
                   </svg>
-                  <div className="absolute top-4 right-4 animate-pulse">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  </div>
                 </div>
 
                 <div className="space-y-6">
                   <h4 className="text-blue-400 font-extrabold uppercase text-xs tracking-widest flex items-center gap-2"><Building2 size={16} /> Ranking por Estados</h4>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {aggregated.usaStatesData.map((state, i) => (
-                      <motion.div key={i} whileHover={{ x: 10 }} className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-2xl group transition-all hover:bg-blue-600/10 hover:border-blue-500/30">
-                        <span className="text-sm font-bold text-[#a3a3a3] group-hover:text-white">{state.name}</span>
-                        <div className="flex items-center gap-4">
-                          <div className="h-1.5 w-20 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500" style={{ width: `${(state.value / 412) * 100}%` }}></div>
-                          </div>
-                          <span className="text-xs font-black text-blue-500">${state.value}M COP</span>
-                        </div>
-                      </motion.div>
+                      <div key={i} className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-xl transition-all hover:bg-white/5">
+                        <span className="text-sm font-bold text-[#a3a3a3]">{state.name}</span>
+                        <span className="text-xs font-black text-blue-500">${state.value}M COP</span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -324,7 +320,7 @@ export default function Dashboard() {
             </div>
 
             {/* SECCIÓN 1: VARIABLES ORIGINALES */}
-            <section className="glass-card p-10 space-y-8">
+            <div className="glass-card p-10 space-y-8">
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <List className="text-blue-500" />
                 <h3 className="text-2xl font-black italic tracking-tighter uppercase">Variables en Base de Datos Original</h3>
@@ -350,10 +346,10 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
-            </section>
+            </div>
 
             {/* SECCIÓN 2: VARIABLES MODELADAS */}
-            <section className="glass-card p-10 space-y-8">
+            <div className="glass-card p-10 space-y-8">
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <Database className="text-blue-500" />
                 <h3 className="text-2xl font-black italic tracking-tighter uppercase">Variables luego de Modeladas</h3>
@@ -388,40 +384,32 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-            </section>
+            </div>
 
-            {/* SECCIÓN 3: PASO A PASO REPLICA (Rúbrica: Paso a Paso) */}
-            <section className="glass-card p-10 space-y-8">
+            {/* SECCIÓN 3: PASO A PASO REPLICA */}
+            <div className="glass-card p-10 space-y-8">
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <Terminal className="text-blue-500" />
                 <h3 className="text-2xl font-black italic tracking-tighter uppercase">Manual Paso a Paso para Réplica</h3>
               </div>
               <div className="space-y-6">
                 <div className="bg-blue-600/5 p-8 rounded-[30px] border border-blue-500/20">
-                  <h4 className="font-black text-lg mb-4 flex items-center gap-2"><Settings size={20} /> Procedimiento Operativo</h4>
                   <ol className="space-y-6 list-decimal list-inside text-sm text-[#a3a3a3]">
-                    <li className="font-bold text-white uppercase italic tracking-tighter">Preparar Archivo de Entrada
-                      <p className="font-normal text-[#737373] text-xs mt-2 lowercase tracking-normal">Descargar el archivo de encuesta actualizado. Cambiar el nombre a <code className="bg-white/10 px-2 py-0.5 rounded text-blue-400">Hoja de cálculo sin título.xlsx</code> y ubicarlo en la raíz del proyecto para que el script Python lo detecte automáticamente.</p>
+                    <li className="font-bold text-white mb-2 uppercase italic">Preparar Archivo de Entrada
+                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Descargar el Excel actualizado y renombrarlo a `Hoja de cálculo sin título.xlsx` en la raíz del proyecto.</p>
                     </li>
-                    <li className="font-bold text-white uppercase italic tracking-tighter">Ejecutar el Pipeline de Modelado
-                      <p className="font-normal text-[#737373] text-xs mt-2 lowercase tracking-normal">Abrir una terminal en el directorio raíz. Ejecutar <code className="bg-white/10 px-2 py-0.5 rounded text-blue-400">python origen/etl_process.py</code>. El script aplicará automáticamente la lógica de conversión a COP, la Regla de Aidan y la normalización REGEX.</p>
+                    <li className="font-bold text-white mb-2 uppercase italic">Ejecutar Pipeline Python
+                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Abrir terminal y correr `python origen/etl_process.py`. El script limpiará geografía y convertirá divisas a COP.</p>
                     </li>
-                    <li className="font-bold text-white uppercase italic tracking-tighter">Validar Limpieza de Datos
-                      <p className="font-normal text-[#737373] text-xs mt-2 lowercase tracking-normal">Verificar el log generado en <code className="bg-white/10 px-2 py-0.5 rounded text-blue-400">origen/etl_log.json</code>. Si el número de "Filtered Rows" coincide con el volumen esperado de la nueva muestra, el modelado ha sido exitoso.</p>
+                    <li className="font-bold text-white mb-2 uppercase italic">Validar JSON Resultante
+                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Verificar que `panel/public/data/processed_data.json` contenga los nuevos registros procesados.</p>
                     </li>
-                    <li className="font-bold text-white uppercase italic tracking-tighter">Distribución y Publicación
-                      <p className="font-normal text-[#737373] text-xs mt-2 lowercase tracking-normal">Realizar un Commit de los cambios en Git (<code className="bg-white/10 px-2 py-0.5 rounded text-blue-400">git add .</code>) y Push a la rama principal de GitHub. El sistema Vercel detectará el nuevo archivo JSON y realizará un redespliegue "Zero-Downtime".</p>
+                    <li className="font-bold text-white mb-2 uppercase italic">Despliegue GitHub/Vercel
+                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Realizar commit y push. Vercel redesplegará el dashboard automáticamente con los datos actualizados.</p>
                     </li>
                   </ol>
                 </div>
               </div>
-            </section>
-
-            <div className="flex gap-4 p-8 bg-blue-600/10 rounded-3xl border border-blue-500/30">
-              <AlertCircle className="text-blue-500 shrink-0" />
-              <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                <strong>NOTA PARA EL SUCESOR:</strong> La arquitectura de este BI está diseñada para ser agnóstica al volumen de datos. Si la estructura del Excel original se mantiene, el 100% de los KPI y tablas de este Centro de Conocimiento seguirán siendo válidos.
-              </p>
             </div>
           </motion.div>
         )}
