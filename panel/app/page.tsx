@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ScatterChart, Scatter, LineChart, Line, Legend, AreaChart, Area
+  ScatterChart, Scatter, LineChart, Line, Legend, AreaChart, Area, Cell
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
