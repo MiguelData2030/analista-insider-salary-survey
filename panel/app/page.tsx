@@ -162,7 +162,7 @@ export default function Dashboard() {
                       <Tooltip
                         cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                         contentStyle={{ backgroundColor: '#141414', border: '1px solid #333', borderRadius: '8px' }}
-                        formatter={(val: number) => [`$${val.toLocaleString()} COP`, 'Promedio Anual']}
+                        formatter={(val: any) => [`$${(Number(val) || 0).toLocaleString()} COP`, 'Promedio Anual']}
                       />
                       <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                     </BarChart>
@@ -213,11 +213,11 @@ export default function Dashboard() {
                   <div className="bg-white/5 p-4 rounded-lg space-y-4 border border-white/5">
                     <div>
                       <h4 className="font-bold text-white mb-1">1. Normalización Geográfica</h4>
-                      <p>Se utiliza una lógica de regex avanzada para consolidar variantes de países (USA, United States, U.S. -> United States). Las ciudades se titulan y se eliminan espacios extra.</p>
+                      <p>Se utiliza una lógica de regex avanzada para consolidar variantes de países (USA, United States, U.S. {"->"} United States). Las ciudades se titulan y se eliminan espacios extra.</p>
                     </div>
                     <div>
                       <h4 className="font-bold text-white mb-1">2. Conversión Financiera (TRM)</h4>
-                      <p>Se aplica la TRM estática de **$3,670.20 COP/USD**. Otras monedas base (EUR, GBP, CAD) se nivelan a USD antes del cambio final a COP.</p>
+                      <p>Se aplica la TRM estática de <strong>$3,670.20 COP/USD</strong>. Otras monedas base (EUR, GBP, CAD) se nivelan a USD antes del cambio final a COP.</p>
                     </div>
                     <div>
                       <h4 className="font-bold text-white mb-1">3. Regla de Aidan (Data Quality)</h4>
@@ -257,7 +257,7 @@ export default function Dashboard() {
                   <div className="mt-8 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex gap-3">
                     <ShieldAlert className="text-yellow-500 shrink-0" size={20} />
                     <p className="text-xs text-yellow-500">
-                      **Nota de Seguridad:** Asegúrate de que el archivo Excel no sea subido a GitHub (configurado en .gitignore) para proteger la privacidad de la muestra bruta.
+                      <strong>Nota de Seguridad:</strong> Asegúrate de que el archivo Excel no sea subido a GitHub (configurado en .gitignore) para proteger la privacidad de la muestra bruta.
                     </p>
                   </div>
                 </div>
