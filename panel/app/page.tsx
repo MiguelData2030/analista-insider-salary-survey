@@ -4,7 +4,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   Users, DollarSign, Briefcase, TrendingUp, Info, List,
   Database, ShieldAlert, Rocket, GraduationCap, Clock,
-  ArrowRightLeft, FileText, Settings, HeartPulse, PieChart as PieIcon
+  ArrowRightLeft, FileText, Settings, HeartPulse, PieChart as PieIcon,
+  CheckCircle2, AlertCircle, Terminal, BookOpen
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -12,7 +13,7 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- Tipos ---
+// --- Tipos de Datos ---
 interface SurveyRecord {
   edad: string;
   cargo: string;
@@ -55,7 +56,6 @@ const TabButton = ({ active, label, icon: Icon, onClick }: any) => (
   </button>
 );
 
-// Tooltip de Alto Contraste (Fix Solicitado)
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -93,11 +93,9 @@ export default function Dashboard() {
   const aggregated = useMemo(() => {
     if (data.length === 0) return null;
 
-    // 1. Estadísticas
     const total = data.length;
     const avg = data.reduce((acc, curr) => acc + curr.ingresos_totales_cop, 0) / total;
 
-    // 2. Industrias Top
     const indStats: Record<string, { sum: number, count: number }> = {};
     data.forEach(curr => {
       const ind = curr.industria || "Otras Industrias";
@@ -112,7 +110,6 @@ export default function Dashboard() {
       }))
       .sort((a, b) => b.value - a.value).slice(0, 10);
 
-    // 3. Educación (Nueva Visualización)
     const eduStats: Record<string, { sum: number, count: number }> = {};
     data.forEach(curr => {
       let edu = curr.educacion || "N/A";
@@ -125,7 +122,6 @@ export default function Dashboard() {
       .map(([name, stat]) => ({ name, value: Math.round((stat.sum / stat.count) / 1e6) }))
       .sort((a, b) => b.value - a.value).slice(0, 6);
 
-    // 4. Género (Nueva Visualización Pie)
     const genStats: Record<string, number> = {};
     data.forEach(x => {
       const g = x.genero || "No indica";
@@ -135,7 +131,6 @@ export default function Dashboard() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value).slice(0, 5);
 
-    // 5. Scatter Data
     const scatter = data.slice(0, 500).map(x => ({
       exp: parseInt(x.exp_total) || 0,
       salary: Math.round(x.ingresos_totales_cop / 1e6),
@@ -151,28 +146,27 @@ export default function Dashboard() {
     };
   }, [data]);
 
-  if (!aggregated) return <div className="h-screen flex items-center justify-center text-blue-500 font-mono">Cargando Inteligencia v3.1...</div>;
+  if (!aggregated) return <div className="h-screen flex items-center justify-center text-blue-500 font-mono">Cargando Documentación Maestra v3.2...</div>;
 
   const COLORS = ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#172554', '#0f172a'];
 
   return (
     <main className="min-h-screen p-8 max-w-7xl mx-auto space-y-8 bg-[#0a0a0a] text-white">
-      {/* Header Consolidado */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/5 pb-8">
         <div>
-          <h1 className="text-4xl font-black gradient-text">Analista Insider v3.1</h1>
-          <p className="text-[#a3a3a3] mt-2 font-medium">Consolidación Analítica | Medallion Data Architecture</p>
+          <h1 className="text-4xl font-black gradient-text tracking-tighter">Analista Insider v3.2</h1>
+          <p className="text-[#a3a3a3] mt-2 font-medium">Ingeniería de Datos Corporativa | Storytelling de Valor</p>
         </div>
         <div className="flex gap-2">
           <TabButton active={activeTab === 'dashboard'} label="Panel Analítico" icon={TrendingUp} onClick={() => setActiveTab('dashboard')} />
-          <TabButton active={activeTab === 'documentation'} label="Centro de Conocimiento" icon={Database} onClick={() => setActiveTab('documentation')} />
+          <TabButton active={activeTab === 'documentation'} label="Centro de Conocimiento Maestre" icon={Database} onClick={() => setActiveTab('documentation')} />
         </div>
       </div>
 
       <AnimatePresence mode="wait">
         {activeTab === 'dashboard' ? (
           <motion.div key="dash" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-            {/* 4 KPIs Originales */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <KpiCard title="Muestra Total" value={aggregated.stats.total.toLocaleString()} icon={Users} description="Registros limpios" />
               <KpiCard title="Ingreso Medio" value={`$${aggregated.stats.avgSalary.toFixed(1)}M`} icon={DollarSign} description="Anual COP (M)" />
@@ -180,9 +174,7 @@ export default function Dashboard() {
               <KpiCard title="Referencia TRM" value="$3,670.20" icon={ArrowRightLeft} description="USD/COP Fijo" />
             </div>
 
-            {/* Grid de 4 Gráficas (2 Originales + 2 Nuevas) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* G1: Industrias (Original Mejorada) */}
               <div className="glass-card p-6 space-y-4">
                 <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Top 10 Sectores Económicos</h3>
                 <div className="h-[300px]">
@@ -198,7 +190,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* G2: Hallazgo Experiencia (Original + Fix Tooltip) */}
               <div className="glass-card p-6 space-y-4">
                 <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Hallazgo: Experiencia vs Ingresos</h3>
                 <div className="h-[300px]">
@@ -214,7 +205,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* G3: Educación (Nueva) */}
               <div className="glass-card p-6 space-y-4">
                 <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Correlación Académica (Promedio M)</h3>
                 <div className="h-[300px]">
@@ -234,7 +224,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* G4: Género (Nueva) */}
               <div className="glass-card p-6 space-y-4">
                 <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Distribución por Género</h3>
                 <div className="h-[300px]">
@@ -260,59 +249,125 @@ export default function Dashboard() {
             </div>
           </motion.div>
         ) : (
-          <motion.div key="docs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-10 space-y-12">
-            <h2 className="text-3xl font-black italic border-b border-white/10 pb-4">MANUAL MAESTRO DE ANALÍTICA</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <section className="space-y-6 text-sm text-[#a3a3a3] leading-relaxed">
-                <div className="flex items-center gap-2 text-white">
-                  <Settings size={20} className="text-blue-500" />
-                  <h4 className="font-bold uppercase tracking-widest">1. Arquitectura de Datos</h4>
-                </div>
-                <p>
-                  Este sistema utiliza una arquitectura <strong>Medallion Lite</strong>. Los datos viajan desde una "Sourcing Zone" (Excel crudo) hasta una "Serving Zone" (JSON optimizado para React).
-                </p>
-                <div className="bg-white/5 p-4 rounded-lg space-y-3">
-                  <p>• <strong>Normalización:</strong> Uso de RegEx para consolidar mercados (e.g., "U.S." → "United States").</p>
-                  <p>• <strong>Conversión:</strong> Estandarización de divisas globales a USD y posterior cambio a COP vía TRM fija.</p>
-                  <p>• <strong>Calidad (Regla Aidan):</strong> Multiplicador x1000 para valores atípicos menores a 100 USD.</p>
-                </div>
-              </section>
-
-              <section className="space-y-6 text-sm text-[#a3a3a3] leading-relaxed">
-                <div className="flex items-center gap-2 text-white">
-                  <FileText size={20} className="text-blue-500" />
-                  <h4 className="font-bold uppercase tracking-widest">2. Manual de Mantenimiento</h4>
-                </div>
-                <div className="space-y-4">
-                  <div className="border-l-2 border-blue-500 pl-4 py-1">
-                    <p className="text-white font-bold">Actualización de Datos</p>
-                    <p>Coloque el Excel en la raíz y ejecute: <code>python origen/etl_process.py</code></p>
-                  </div>
-                  <div className="border-l-2 border-blue-500 pl-4 py-1">
-                    <p className="text-white font-bold">Despliegue</p>
-                    <p>Haga Push a GitHub. Vercel detectará el nuevo <code>processed_data.json</code> y publicará automáticamente.</p>
-                  </div>
-                  <div className="border-l-2 border-blue-500 pl-4 py-1">
-                    <p className="text-white font-bold">Tipado</p>
-                    <p>Las interfaces en <code>page.tsx</code> aseguran que no haya fallas de visualización por datos nulos.</p>
-                  </div>
-                </div>
-              </section>
+          <motion.div key="docs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 pb-20">
+            {/* Header de Documentación */}
+            <div className="bg-blue-600/10 p-10 rounded-[40px] border border-blue-500/20">
+              <h2 className="text-3xl font-black mb-4 flex items-center gap-3"><BookOpen size={36} /> Knowledge Center Maestre</h2>
+              <p className="text-[#a3a3a3] text-sm max-w-3xl">
+                Este centro contiene la fuente de verdad técnica para el proyecto. Diseñado bajo estándares de ingeniería de datos para asegurar la **continuidad operativa**, la **claridad del modelado** y la **perfecta replicabilidad** del sistema.
+              </p>
             </div>
 
-            <section className="bg-blue-600/10 p-8 rounded-3xl border border-blue-500/20">
-              <h4 className="font-black text-xl mb-4 flex items-center gap-2"><Rocket /> Guía de Continuidad</h4>
-              <p className="text-sm text-[#737373]">
-                Este proyecto ha sido diseñado para ser totalmente autónomo. En caso de vacaciones o rotación de equipo, cualquier analista con conocimientos básicos de Python puede mantener el pipeline. La lógica de negocio está encapsulada en <code>src/etl_process.py</code> y la visualización en <code>panel/app/page.tsx</code>.
-              </p>
+            {/* SECCIÓN 1: TIPOLOGÍA DE VARIABLES (Rúbrica: Variables Tabla Original) */}
+            <section className="glass-card p-8 space-y-6">
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <List className="text-blue-500" />
+                <h3 className="text-xl font-bold uppercase tracking-widest">1. Diccionario de Variables Originales</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-[#a3a3a3]">
+                  <thead>
+                    <tr className="text-white border-b border-white/10 uppercase text-[10px] tracking-tighter">
+                      <th className="py-3">Columna Excel</th>
+                      <th className="py-3">Variable Sistema</th>
+                      <th className="py-3">Tipo de Dato</th>
+                      <th className="py-3">Descripción / Propósito</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    <tr><td className="py-3 font-mono text-xs">How old are you?</td><td className="py-3">edad</td><td className="py-3">Categorica (String)</td><td className="py-3">Rango de edad del encuestado para análisis demográfico.</td></tr>
+                    <tr><td className="py-3 font-mono text-xs">Industry</td><td className="py-3">industria</td><td className="py-3">Categorica (String)</td><td className="py-3">Sector económico principal de empleo.</td></tr>
+                    <tr><td className="py-3 font-mono text-xs">Job title</td><td className="py-3">cargo</td><td className="py-3">Categorica (String)</td><td className="py-3">Nombre formal del puesto de trabajo.</td></tr>
+                    <tr><td className="py-3 font-mono text-xs">Annual salary</td><td className="py-3">salario_anual</td><td className="py-3">Numérico (Float)</td><td className="py-3">Ingreso base anual bruto reportado por el usuario.</td></tr>
+                    <tr><td className="py-3 font-mono text-xs">Additional comp</td><td className="py-3">comp_adicional</td><td className="py-3">Numérico (Float)</td><td className="py-3">Bonos, comisiones y compensación variable.</td></tr>
+                    <tr><td className="py-3 font-mono text-xs">Currency</td><td className="py-3">moneda</td><td className="py-3">Categorica (String)</td><td className="py-3">Divisa base del país de origen (USD, EUR, etc.).</td></tr>
+                    <tr><td className="py-3 font-mono text-xs">Country</td><td className="py-3">pais</td><td className="py-3">Categorica (String)</td><td className="py-3">Ubicación nacional para normalización geoespacial.</td></tr>
+                    <tr><td className="py-3 font-mono text-xs">Experience total</td><td className="py-3">exp_total</td><td className="py-3">Numérico (Float)</td><td className="py-3">Años totales de trayectoria laboral profesional.</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
+
+            {/* SECCIÓN 2: DOCUMENTACIÓN DE MODELADO (Rúbrica: Modelado) */}
+            <section className="glass-card p-8 space-y-6">
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <Database className="text-blue-500" />
+                <h3 className="text-xl font-bold uppercase tracking-widest">2. Ingeniería y Modelado de Datos</h3>
+              </div>
+              <p className="text-sm text-[#a3a3a3]">
+                El pipeline transforma los datos originales mediante reglas de negocio rigurosas para asegurar la **integridad de los KPIs**.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-4">
+                  <h4 className="text-blue-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2"><ArrowRightLeft size={16} /> Lógica de Conversión</h4>
+                  <p className="text-xs text-[#737373]">
+                    Se implementa un mapeo de 11 divisas principales a USD. <br />
+                    <strong>Fórmula:</strong> `Ingreso_COP = (Base + Extra) * Rate_USD * TRM_COP` <br />
+                    <strong>TRM Estática:</strong> $3,670.20 para control de varianza temporal.
+                  </p>
+                </div>
+                <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-4">
+                  <h4 className="text-blue-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2"><ShieldAlert size={16} /> Limpieza y Data Quality</h4>
+                  <p className="text-xs text-[#737373]">
+                    <strong>Regla de Aidan:</strong> Multiplicación x1000 para corregir errores de digitación en salarios menores a 100 USD. <br />
+                    <strong>Outlier Cap:</strong> Eliminación del top 1% de ingresos (percentil 0.99) para evitar sesgos por CEOs o datos erróneos de magnitud.
+                  </p>
+                </div>
+                <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-4">
+                  <h4 className="text-blue-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2"><Rocket size={16} /> Variables Modeladas</h4>
+                  <p className="text-xs text-[#737373]">
+                    • <code className="text-white">ingresos_totales_cop</code>: Suma de base y compensación normalizada. <br />
+                    • <code className="text-white">pais_limpio</code>: Geografía consolidada vía REGEX (USA, America → United States).
+                  </p>
+                </div>
+                <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-4">
+                  <h4 className="text-blue-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2"><CheckCircle2 size={16} /> Auditoría (Logs)</h4>
+                  <p className="text-xs text-[#737373]">
+                    El script genera un archivo `etl_log.json` que registra la fecha de ejecución, el número de filas originales vs. procesadas y cualquier error detectado durante el runtime.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* SECCIÓN 3: PASO A PASO (Rúbrica: Replicabilidad) */}
+            <section className="glass-card p-8 space-y-6">
+              <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                <Terminal className="text-blue-500" />
+                <h3 className="text-xl font-bold uppercase tracking-widest">3. Manual Paso a Paso de Replicación</h3>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { step: "01", title: "Entorno Técnico", desc: "Instalar Python 3.10+ y las librerías necesarias con el comando: `pip install pandas openpyxl`." },
+                  { step: "02", title: "Preparación de Datos", desc: "Colocar el nuevo archivo Excel con la estructura de la encuesta en la raíz del proyecto, nombrado como `Hoja de cálculo sin título.xlsx`." },
+                  { step: "03", title: "Ejecución del Pipeline", desc: "Abrir una terminal en la carpeta raíz y ejecutar: `python origen/etl_process.py`. Validar que el log confirme la generación del JSON." },
+                  { step: "04", title: "Validación de Salida", desc: "Verificar que el archivo `processed_data.json` se haya actualizado en la carpeta `panel/public/data/`." },
+                  { step: "05", title: "Despliegue GitHub/Vercel", desc: "Hacer commit de los cambios y push a GitHub. Vercel redesplegará el dashboard automáticamente en segundos." }
+                ].map((s, i) => (
+                  <div key={i} className="flex gap-6 items-start group">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center font-black text-blue-500 shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      {s.step}
+                    </div>
+                    <div className="pt-2">
+                      <p className="text-white font-bold text-sm tracking-tight">{s.title}</p>
+                      <p className="text-xs text-[#737373] mt-1">{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <div className="p-8 bg-yellow-500/10 border border-yellow-500/20 rounded-3xl flex gap-4">
+              <AlertCircle className="text-yellow-500 shrink-0" />
+              <p className="text-xs text-yellow-500 leading-relaxed font-bold">
+                POLÍTICA DE CONTINUIDAD: La lógica de este BI está diseñada para ser independiente del desarrollador original. Siguiendo este manual, cualquier analista del nivel Senior puede garantizar el 100% de la operatividad del dashboard.
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <footer className="text-center py-12 text-[#444] text-[10px] font-black uppercase tracking-[0.3em] border-t border-white/5">
-        <p>© 2026 Senior Data Engineering Team | Internal Intelligence Framework</p>
+        <p>© 2026 Senior Data Engineering Team | Internal Intelligence Framework v3.2</p>
       </footer>
     </main>
   );
