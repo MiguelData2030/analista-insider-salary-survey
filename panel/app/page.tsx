@@ -4,11 +4,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   Users, DollarSign, Briefcase, TrendingUp, Info, List,
   Database, ShieldAlert, Rocket, GraduationCap, Clock,
-  ArrowRightLeft, FileText, Settings, HeartPulse
+  ArrowRightLeft, FileText, Settings, HeartPulse, PieChart as PieIcon
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ScatterChart, Scatter, LineChart, Line, Legend, AreaChart, Area, Cell
+  ScatterChart, Scatter, Cell, Legend, PieChart, Pie
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,17 +32,14 @@ interface SurveyRecord {
 const KpiCard = ({ title, value, icon: Icon, description }: { title: string, value: string, icon: any, description?: string }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
-    whileHover={{ scale: 1.02 }}
     animate={{ opacity: 1, y: 0 }}
     className="glass-card p-6 flex flex-col gap-2 border-white/5 hover:border-blue-500/30 transition-all cursor-default"
   >
     <div className="flex justify-between items-start">
       <p className="text-[#a3a3a3] text-sm font-medium uppercase tracking-wider">{title}</p>
-      <div className="p-2 bg-blue-500/10 rounded-lg">
-        <Icon className="w-5 h-5 text-[#3b82f6]" />
-      </div>
+      <Icon className="w-5 h-5 text-[#3b82f6]" />
     </div>
-    <h3 className="text-3xl font-bold tracking-tight">{value}</h3>
+    <h3 className="text-2xl font-bold">{value}</h3>
     {description && <p className="text-[10px] text-[#737373] mt-1 font-mono">{description}</p>}
   </motion.div>
 );
@@ -50,7 +47,7 @@ const KpiCard = ({ title, value, icon: Icon, description }: { title: string, val
 const TabButton = ({ active, label, icon: Icon, onClick }: any) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-bold transition-all duration-300 ${active ? 'bg-[#3b82f6] text-white shadow-xl shadow-blue-500/30 -translate-y-1' : 'bg-white/5 text-[#737373] hover:bg-white/10 hover:text-white'
+    className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all ${active ? 'bg-[#3b82f6] text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 text-[#737373] hover:bg-white/10'
       }`}
   >
     <Icon size={18} />
@@ -58,19 +55,20 @@ const TabButton = ({ active, label, icon: Icon, onClick }: any) => (
   </button>
 );
 
-// Estilo personalizado para Tooltip (Fix: Legibilidad)
+// Tooltip de Alto Contraste (Fix Solicitado)
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1a1a1a] border border-blue-500/30 p-4 rounded-xl shadow-2xl backdrop-blur-xl">
-        <p className="text-blue-400 font-bold mb-2 text-xs uppercase tracking-widest">{label || 'Detalle'}</p>
+      <div className="bg-white border-2 border-blue-500 p-3 rounded-lg shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+        <p className="text-black font-black mb-1 text-xs uppercase tracking-tighter">{label || 'Dato'}</p>
         {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex justify-between gap-8 items-baseline py-1 border-t border-white/5 first:border-0">
-            <span className="text-[#a3a3a3] text-[10px]">{entry.name}:</span>
-            <span className="text-white font-mono font-bold text-sm">
-              {typeof entry.value === 'number' && entry.name.toLowerCase().includes('cop')
+          <div key={index} className="flex justify-between gap-4 items-center">
+            <span className="text-gray-600 text-[10px] font-bold">{entry.name}:</span>
+            <span className="text-blue-700 font-black text-xs">
+              {typeof entry.value === 'number' && entry.value > 1000
                 ? `$${entry.value.toLocaleString()}`
                 : entry.value}
+              {entry.unit || ''}
             </span>
           </div>
         ))}
@@ -92,15 +90,14 @@ export default function Dashboard() {
       .catch(err => console.error("Error loading data:", err));
   }, []);
 
-  // Lógica de Datos Avanzada
   const aggregated = useMemo(() => {
     if (data.length === 0) return null;
 
-    // 1. Estadísticas Base
+    // 1. Estadísticas
     const total = data.length;
     const avg = data.reduce((acc, curr) => acc + curr.ingresos_totales_cop, 0) / total;
 
-    // 2. Agregación de Industrias (Promedio)
+    // 2. Industrias Top
     const indStats: Record<string, { sum: number, count: number }> = {};
     data.forEach(curr => {
       const ind = curr.industria || "Otras Industrias";
@@ -108,281 +105,214 @@ export default function Dashboard() {
       indStats[ind].sum += curr.ingresos_totales_cop;
       indStats[ind].count += 1;
     });
-
     const industries = Object.entries(indStats)
       .map(([name, stat]) => ({
-        full_name: name,
         name: name.length > 15 ? name.substring(0, 15) + '...' : name,
         value: Math.round(stat.sum / stat.count)
       }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
+      .sort((a, b) => b.value - a.value).slice(0, 10);
 
-    // 3. PRO: Agregación por Educación
+    // 3. Educación (Nueva Visualización)
     const eduStats: Record<string, { sum: number, count: number }> = {};
     data.forEach(curr => {
-      let edu = curr.educacion || "No Especificado";
-      if (edu.length > 30) edu = edu.substring(0, 30) + "...";
+      let edu = curr.educacion || "N/A";
+      if (edu.length > 20) edu = edu.substring(0, 18) + "..";
       if (!eduStats[edu]) eduStats[edu] = { sum: 0, count: 0 };
       eduStats[edu].sum += curr.ingresos_totales_cop;
       eduStats[edu].count += 1;
     });
-
     const educationData = Object.entries(eduStats)
       .map(([name, stat]) => ({ name, value: Math.round((stat.sum / stat.count) / 1e6) }))
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => b.value - a.value).slice(0, 6);
 
-    // 4. PRO: Curva de Experiencia (Tendencia)
-    const expMap: Record<number, { sum: number, count: number }> = {};
+    // 4. Género (Nueva Visualización Pie)
+    const genStats: Record<string, number> = {};
     data.forEach(x => {
-      const years = parseInt(x.exp_total) || 0;
-      if (years > 40) return; // Limpiar outliers de años
-      if (!expMap[years]) expMap[years] = { sum: 0, count: 0 };
-      expMap[years].sum += x.ingresos_totales_cop;
-      expMap[years].count += 1;
+      const g = x.genero || "No indica";
+      genStats[g] = (genStats[g] || 0) + 1;
     });
+    const genderData = Object.entries(genStats)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value).slice(0, 5);
 
-    const experienceTrend = Object.entries(expMap)
-      .map(([years, stat]) => ({
-        x: parseInt(years),
-        salary: Math.round((stat.sum / stat.count) / 1e6)
-      }))
-      .sort((a, b) => a.x - b.x);
+    // 5. Scatter Data
+    const scatter = data.slice(0, 500).map(x => ({
+      exp: parseInt(x.exp_total) || 0,
+      salary: Math.round(x.ingresos_totales_cop / 1e6),
+      industry: x.industria
+    }));
 
     return {
-      stats: { total, avgSalary: avg / 1e6, topIndustry: industries[0]?.full_name || 'N/A' },
+      stats: { total, avgSalary: avg / 1e6, topIndustry: industries[0]?.name || 'N/A' },
       industries,
       educationData,
-      experienceTrend,
-      all: data.slice(0, 800) // Muestra para el Scatter original
+      genderData,
+      scatter
     };
   }, [data]);
 
-  if (!aggregated) return <div className="h-screen flex items-center justify-center text-blue-500 font-mono animate-pulse">Invocando Inteligencia de Datos...</div>;
+  if (!aggregated) return <div className="h-screen flex items-center justify-center text-blue-500 font-mono">Cargando Inteligencia v3.1...</div>;
+
+  const COLORS = ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#172554', '#0f172a'];
 
   return (
-    <main className="min-h-screen p-8 max-w-7xl mx-auto space-y-12 bg-[#050505] text-white">
-      {/* Dynamic Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white/[0.02] p-8 rounded-3xl border border-white/5">
+    <main className="min-h-screen p-8 max-w-7xl mx-auto space-y-8 bg-[#0a0a0a] text-white">
+      {/* Header Consolidado */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/5 pb-8">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400">Sistema Elite de Analistas</span>
-          </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white">Analista Insider <span className="text-blue-600">v3.0</span></h1>
-          <p className="text-[#737373] mt-2 font-medium">Arquitectura Medallion para Investigación Salarial Corporativa</p>
+          <h1 className="text-4xl font-black gradient-text">Analista Insider v3.1</h1>
+          <p className="text-[#a3a3a3] mt-2 font-medium">Consolidación Analítica | Medallion Data Architecture</p>
         </div>
-
-        <div className="flex gap-3 bg-black/40 p-1.5 rounded-2xl border border-white/5">
-          <TabButton active={activeTab === 'dashboard'} label="Panel Exploratorio" icon={TrendingUp} onClick={() => setActiveTab('dashboard')} />
-          <TabButton active={activeTab === 'documentation'} label="Knowledge Center" icon={Database} onClick={() => setActiveTab('documentation')} />
+        <div className="flex gap-2">
+          <TabButton active={activeTab === 'dashboard'} label="Panel Analítico" icon={TrendingUp} onClick={() => setActiveTab('dashboard')} />
+          <TabButton active={activeTab === 'documentation'} label="Centro de Conocimiento" icon={Database} onClick={() => setActiveTab('documentation')} />
         </div>
       </div>
 
       <AnimatePresence mode="wait">
         {activeTab === 'dashboard' ? (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-12"
-          >
-            {/* KPIs Elite */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <KpiCard title="Muestra Total" value={aggregated.stats.total.toLocaleString()} icon={Users} description="Registros validos procesados" />
-              <KpiCard title="Retribución Media" value={`$${aggregated.stats.avgSalary.toFixed(1)}M`} icon={DollarSign} description="COP brutos anuales" />
-              <KpiCard title="Sector Lider" value={aggregated.stats.topIndustry.substring(0, 20)} icon={HeartPulse} description="Mayor media salarial" />
-              <KpiCard title="Referencia TRM" value="$3,670.20" icon={ArrowRightLeft} description="USD/COP - Fijo Sistema" />
+          <motion.div key="dash" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+            {/* 4 KPIs Originales */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <KpiCard title="Muestra Total" value={aggregated.stats.total.toLocaleString()} icon={Users} description="Registros limpios" />
+              <KpiCard title="Ingreso Medio" value={`$${aggregated.stats.avgSalary.toFixed(1)}M`} icon={DollarSign} description="Anual COP (M)" />
+              <KpiCard title="Industria Top" value={aggregated.stats.topIndustry} icon={Briefcase} description="Mayor promedio salarial" />
+              <KpiCard title="Referencia TRM" value="$3,670.20" icon={ArrowRightLeft} description="USD/COP Fijo" />
             </div>
 
-            {/* Fila 1: Industrias y Educación */}
+            {/* Grid de 4 Gráficas (2 Originales + 2 Nuevas) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="glass-card p-8 space-y-6">
-                <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                  <h3 className="font-black text-xl flex items-center gap-2"><Briefcase className="text-blue-500" /> Sectores de Alto Valor</h3>
-                  <span className="text-[10px] bg-blue-500/10 px-2 py-1 rounded text-blue-400 font-mono">AVG COP / AÑO</span>
-                </div>
-                <div className="h-[400px]">
+              {/* G1: Industrias (Original Mejorada) */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Top 10 Sectores Económicos</h3>
+                <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={aggregated.industries} layout="vertical">
-                      <CartesianGrid strokeDasharray="5 5" stroke="#1a1a1a" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                       <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" stroke="#737373" fontSize={11} width={130} />
-                      <Tooltip content={<CustomTooltip />} cursor={{ fill: 'white', fillOpacity: 0.03 }} />
-                      <Bar dataKey="value" fill="#2563eb" radius={[0, 10, 10, 0]} />
+                      <YAxis dataKey="name" type="category" stroke="#a3a3a3" fontSize={10} width={100} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              <div className="glass-card p-8 space-y-6">
-                <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                  <h3 className="font-black text-xl flex items-center gap-2"><GraduationCap className="text-blue-500" /> Correlación Académica</h3>
-                  <span className="text-[10px] bg-blue-500/10 px-2 py-1 rounded text-blue-400 font-mono">MILLONES COP</span>
+              {/* G2: Hallazgo Experiencia (Original + Fix Tooltip) */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Hallazgo: Experiencia vs Ingresos</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                      <XAxis type="number" dataKey="exp" name="Experiencia" unit=" años" stroke="#737373" fontSize={10} />
+                      <YAxis type="number" dataKey="salary" name="Salario" unit="M" stroke="#737373" fontSize={10} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Scatter data={aggregated.scatter} fill="#3b82f6" fillOpacity={0.5} />
+                    </ScatterChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="h-[400px]">
+              </div>
+
+              {/* G3: Educación (Nueva) */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Correlación Académica (Promedio M)</h3>
+                <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={aggregated.educationData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#222" horizontal={false} />
-                      <XAxis dataKey="name" stroke="#737373" fontSize={9} interval={0} angle={-15} textAnchor="end" height={60} />
-                      <YAxis stroke="#444" fontSize={10} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                      <XAxis dataKey="name" stroke="#a3a3a3" fontSize={10} />
+                      <YAxis stroke="#a3a3a3" fontSize={10} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="#3b82f6">
+                      <Bar dataKey="value" fill="#2563eb">
                         {aggregated.educationData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fillOpacity={1 - index * 0.12} />
+                          <Cell key={`c-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
-            </div>
 
-            {/* Fila 2: Tendencias Temporales Pro */}
-            <div className="glass-card p-10 space-y-8">
-              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-white/5 pb-6">
-                <div>
-                  <h3 className="font-black text-2xl flex items-center gap-2"><Clock className="text-blue-500" /> Curva de Maduración Salarial</h3>
-                  <p className="text-sm text-[#737373] mt-1">Análisis longitudinal de ingresos vs años de experiencia profesional</p>
+              {/* G4: Género (Nueva) */}
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="font-bold text-sm tracking-widest text-[#737373] uppercase">Distribución por Género</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={aggregated.genderData}
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {aggregated.genderData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend verticalAlign="bottom" height={36} />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 bg-blue-500 rounded-full"></div> <span className="text-[10px] uppercase font-bold text-[#a3a3a3]">Ingreso Medio (M)</span></div>
-                </div>
-              </div>
-              <div className="h-[450px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={aggregated.experienceTrend} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorSalary" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="x" stroke="#737373" fontSize={12} label={{ value: 'Años de Experiencia', position: 'insideBottomRight', offset: -10, fill: '#444' }} />
-                    <YAxis stroke="#444" fontSize={12} label={{ value: 'Millones COP', angle: -90, position: 'insideLeft', fill: '#444' }} />
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="salary" name="Salario" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorSalary)" />
-                  </AreaChart>
-                </ResponsiveContainer>
               </div>
             </div>
           </motion.div>
         ) : (
-          <motion.div
-            key="documentation"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.02 }}
-            className="space-y-8"
-          >
-            {/* Knowledge Navigator */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="glass-card p-8 border-l-4 border-blue-600">
-                <Settings className="text-blue-500 mb-4" size={32} />
-                <h4 className="font-black text-lg mb-2">Build Pipeline</h4>
-                <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                  Framework: Next.js 15 (App Router). <br />
-                  Build: `npm run build`<br />
-                  Runtime: Vercel Edge.
-                </p>
-              </div>
-              <div className="glass-card p-8 border-l-4 border-accent">
-                <Database className="text-accent mb-4" size={32} />
-                <h4 className="font-black text-lg mb-2">Ingeniería de Datos</h4>
-                <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                  Sourcing: Excel Binary.<br />
-                  Engine: Python + Pandas.<br />
-                  Format: Geo-Compressed JSON.
-                </p>
-              </div>
-              <div className="glass-card p-8 border-l-4 border-green-500">
-                <ShieldAlert className="text-green-500 mb-4" size={32} />
-                <h4 className="font-black text-lg mb-2">Data Quality</h4>
-                <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                  Outlier Cap: 99th Percentile. <br />
-                  Regla Aidan: Magnitud x1000.<br />
-                  UTF-8 Solidified.
-                </p>
-              </div>
-            </div>
+          <motion.div key="docs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-10 space-y-12">
+            <h2 className="text-3xl font-black italic border-b border-white/10 pb-4">MANUAL MAESTRO DE ANALÍTICA</h2>
 
-            <div className="glass-card p-12 space-y-16">
-              <section className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-1 bg-blue-600"></div>
-                  <h2 className="text-3xl font-black italic tracking-tighter">PROTOCOLO DE ARQUITECTURA TÉCNICA</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <section className="space-y-6 text-sm text-[#a3a3a3] leading-relaxed">
+                <div className="flex items-center gap-2 text-white">
+                  <Settings size={20} className="text-blue-500" />
+                  <h4 className="font-bold uppercase tracking-widest">1. Arquitectura de Datos</h4>
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                  <div className="space-y-6">
-                    <h5 className="text-blue-500 font-black uppercase text-xs tracking-widest flex items-center gap-2">
-                      <Rocket size={14} /> El Pipeline de Transformación
-                    </h5>
-                    <div className="bg-white/[0.03] p-6 rounded-2xl space-y-4 border border-white/5 text-sm leading-relaxed text-[#737373]">
-                      <p>
-                        Los datos se cargan vía <code className="text-white">pd.read_excel</code> utilizando indexación posicional fija para evitar fallas por cambios en los nombres de las columnas (headers) del archivo original.
-                      </p>
-                      <p>
-                        <strong>Normalización Geoespacial:</strong> El script ejecuta una cascada de mapeos para consolidar mercados principales. Esto permite que el dashboard muestre datos agrupados por valor económico y no por variaciones de escritura.
-                      </p>
-                      <p>
-                        <strong>Conversión en Cascada:</strong> Primero se nivelan todas las divisas internacionales a USD usando un factor de conversión global, y finalmente se aplica la TRM local de <span className="text-white font-mono">$3,670.20</span>.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <h5 className="text-blue-500 font-black uppercase text-xs tracking-widest flex items-center gap-2">
-                      <FileText size={14} /> Manual de Reemplazo y Vacaciones
-                    </h5>
-                    <div className="bg-white/[0.03] p-6 rounded-2xl space-y-4 border border-white/5 text-sm">
-                      <ul className="space-y-4 text-[#a3a3a3]">
-                        <li className="flex gap-3">
-                          <span className="text-blue-500 font-bold font-mono">STEP_01:</span>
-                          <span>Asegurarse de tener Python 3.10+ instalado con `pandas` y `openpyxl`.</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-500 font-bold font-mono">STEP_02:</span>
-                          <span>Al recibir el nuevo reporte, guardarlo exactamente con el nombre `Hoja de cálculo sin título.xlsx` en la raíz del proyecto.</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-500 font-bold font-mono">STEP_03:</span>
-                          <span>Ejecutar la orden: <code className="bg-black text-blue-400 px-2 py-1 rounded">python origen/etl_process.py</code>. Si ves el mensaje "ETL Completado", el archivo JSON ya está actualizado.</span>
-                        </li>
-                        <li className="flex gap-3">
-                          <span className="text-blue-500 font-bold font-mono">STEP_04:</span>
-                          <span>Hacer Git Push al repositorio. Vercel reconstruirá el sitio en 90 segundos con los datos frescos.</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                <p>
+                  Este sistema utiliza una arquitectura <strong>Medallion Lite</strong>. Los datos viajan desde una "Sourcing Zone" (Excel crudo) hasta una "Serving Zone" (JSON optimizado para React).
+                </p>
+                <div className="bg-white/5 p-4 rounded-lg space-y-3">
+                  <p>• <strong>Normalización:</strong> Uso de RegEx para consolidar mercados (e.g., "U.S." → "United States").</p>
+                  <p>• <strong>Conversión:</strong> Estandarización de divisas globales a USD y posterior cambio a COP vía TRM fija.</p>
+                  <p>• <strong>Calidad (Regla Aidan):</strong> Multiplicador x1000 para valores atípicos menores a 100 USD.</p>
                 </div>
               </section>
 
-              <section className="bg-blue-600/10 p-10 rounded-[40px] border border-blue-500/20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-12 opacity-10 blur-xl">
-                  <Rocket size={200} className="text-blue-500" />
+              <section className="space-y-6 text-sm text-[#a3a3a3] leading-relaxed">
+                <div className="flex items-center gap-2 text-white">
+                  <FileText size={20} className="text-blue-500" />
+                  <h4 className="font-bold uppercase tracking-widest">2. Manual de Mantenimiento</h4>
                 </div>
-                <div className="relative z-10 space-y-4">
-                  <h3 className="text-2xl font-black">Escalabilidad Futura</h3>
-                  <p className="text-[#a3a3a3] text-sm max-w-2xl leading-relaxed">
-                    Este sistema está preparado para transicionar a una base de datos real (PostgreSQL/Supabase) simplemente modificando la conexión en <code className="text-white">etl_process.py</code>. El frontend ya maneja tipos de datos estrictos, por lo que la migración sería transparente para el usuario final.
-                  </p>
+                <div className="space-y-4">
+                  <div className="border-l-2 border-blue-500 pl-4 py-1">
+                    <p className="text-white font-bold">Actualización de Datos</p>
+                    <p>Coloque el Excel en la raíz y ejecute: <code>python origen/etl_process.py</code></p>
+                  </div>
+                  <div className="border-l-2 border-blue-500 pl-4 py-1">
+                    <p className="text-white font-bold">Despliegue</p>
+                    <p>Haga Push a GitHub. Vercel detectará el nuevo <code>processed_data.json</code> y publicará automáticamente.</p>
+                  </div>
+                  <div className="border-l-2 border-blue-500 pl-4 py-1">
+                    <p className="text-white font-bold">Tipado</p>
+                    <p>Las interfaces en <code>page.tsx</code> aseguran que no haya fallas de visualización por datos nulos.</p>
+                  </div>
                 </div>
               </section>
             </div>
+
+            <section className="bg-blue-600/10 p-8 rounded-3xl border border-blue-500/20">
+              <h4 className="font-black text-xl mb-4 flex items-center gap-2"><Rocket /> Guía de Continuidad</h4>
+              <p className="text-sm text-[#737373]">
+                Este proyecto ha sido diseñado para ser totalmente autónomo. En caso de vacaciones o rotación de equipo, cualquier analista con conocimientos básicos de Python puede mantener el pipeline. La lógica de negocio está encapsulada en <code>src/etl_process.py</code> y la visualización en <code>panel/app/page.tsx</code>.
+              </p>
+            </section>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <footer className="flex flex-col md:flex-row justify-between items-center py-12 border-t border-white/5 text-[#444] text-[10px] uppercase font-black tracking-[0.2em] gap-4">
-        <p>© 2026 Senior Data Engineering Team | Internal Intelligence Platform</p>
-        <div className="flex gap-8">
-          <a href="#" className="hover:text-blue-500 transition-colors">Security Standards</a>
-          <a href="#" className="hover:text-blue-500 transition-colors">Methodology</a>
-        </div>
+      <footer className="text-center py-12 text-[#444] text-[10px] font-black uppercase tracking-[0.3em] border-t border-white/5">
+        <p>© 2026 Senior Data Engineering Team | Internal Intelligence Framework</p>
       </footer>
     </main>
   );
