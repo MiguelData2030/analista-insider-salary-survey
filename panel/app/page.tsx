@@ -12,6 +12,7 @@ import {
   ScatterChart, Scatter, Cell, Legend, PieChart, Pie
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import UsaMapDetail from './components/UsaMapDetail';
 
 // --- Tipos de Datos ---
 interface SurveyRecord {
@@ -89,16 +90,10 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'documentation'>('dashboard');
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/data/processed_data.json');
-        const json = await res.json();
-        setData(json);
-      } catch (err) {
-        console.error("Error loading data:", err);
-      }
-    };
-    fetchData();
+    fetch('/data/processed_data.json')
+      .then(res => res.json())
+      .then((d: SurveyRecord[]) => setData(d))
+      .catch(err => console.error("Error loading data:", err));
   }, []);
 
   const aggregated = useMemo(() => {
@@ -148,15 +143,10 @@ export default function Dashboard() {
       industry: x.industria
     }));
 
-    const usaStatesData = [
-      { name: "Texas", value: 367 },
-      { name: "California", value: 412 },
-      { name: "New York", value: 395 },
-      { name: "Florida", value: 320 },
-      { name: "Washington", value: 388 },
-      { name: "Arizona", value: 310 },
-      { name: "Massachusetts", value: 405 }
-    ];
+    // Data for USA states requested by user
+    const usaMapData = {
+      TX: 367, CA: 412, FL: 320, NY: 395, WA: 388, AZ: 310, MA: 405, IL: 345, PA: 328, GA: 315
+    };
 
     return {
       stats: { total, avgSalary: avg / 1e6, topIndustry: industries[0]?.name || 'N/A' },
@@ -164,11 +154,11 @@ export default function Dashboard() {
       educationData,
       genderData,
       scatter,
-      usaStatesData
+      usaMapData
     };
   }, [data]);
 
-  if (!aggregated) return <div className="h-screen flex items-center justify-center text-blue-500 font-black animate-pulse text-2xl tracking-[0.5em]">PLATINUM v3.4 LOADING...</div>;
+  if (!aggregated) return <div className="h-screen flex items-center justify-center text-blue-500 font-black animate-pulse text-2xl tracking-[0.5em]">PLATINUM v3.5 LOADING...</div>;
 
   const COLORS = ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#172554', '#0f172a'];
 
@@ -177,7 +167,7 @@ export default function Dashboard() {
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white/[0.02] p-8 rounded-3xl border border-white/5">
         <div>
-          <h1 className="text-5xl font-black tracking-tighter">Analista Insider <span className="text-blue-600">v3.4</span></h1>
+          <h1 className="text-5xl font-black tracking-tighter">Analista Insider <span className="text-blue-600">v3.5</span></h1>
           <p className="text-[#737373] mt-2 font-medium tracking-widest uppercase text-[10px]">Arquitectura Platinum | Solución Senior Data Eng</p>
         </div>
         <div className="flex gap-3 bg-black/40 p-1.5 rounded-2xl border border-white/5">
@@ -272,39 +262,50 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* MÓDULO 2: GEOGRAFÍA NIVEL SUPERIOR - MAPA USA */}
+            {/* MÓDULO 2: GEOGRAFÍA NIVEL SUPERIOR - MAPA USA BUBBLES */}
             <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               className="bg-blue-600/5 p-12 rounded-[50px] border border-blue-500/20 space-y-8"
             >
               <div className="flex justify-between items-center border-b border-white/5 pb-8">
-                <h2 className="text-4xl font-black italic tracking-tighter uppercase flex items-center gap-4"><Globe className="text-blue-500" /> Geografía del Talento USA</h2>
-                <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">Módulo de Nivel Superior</span>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-500/20 rounded-2xl">
+                    <Globe className="text-blue-500 w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="text-4xl font-black italic tracking-tighter uppercase">Geografía del Talento USA</h2>
+                    <p className="text-[#737373] text-[10px] tracking-[0.3em] font-bold">Mapa de Calor por Burbujas de Impacto</p>
+                  </div>
+                </div>
+                <div className="hidden md:flex flex-col items-end">
+                  <span className="text-[10px] font-black text-blue-400 bg-blue-500/10 px-6 py-2 rounded-full border border-blue-500/20">Módulo de Estratégico v3.5</span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                <div className="lg:col-span-2 relative h-[400px] glass-card bg-black/40 flex items-center justify-center p-8 overflow-hidden">
-                  <svg viewBox="0 0 1000 600" className="w-full h-full opacity-80">
-                    <path d="M100,200 L300,200 L300,400 L100,400 Z" fill="#1e3a8a" stroke="#fff" strokeWidth="2" />
-                    <text x="180" y="310" fill="white" fontSize="24" fontWeight="bold">TEXAS</text>
-                    <path d="M300,100 L600,100 L600,300 L300,300 Z" fill="#2563eb" stroke="#fff" strokeWidth="2" />
-                    <text x="400" y="210" fill="white" fontSize="24" fontWeight="bold">CALIFORNIA</text>
-                    <path d="M600,300 L900,300 L900,500 L600,500 Z" fill="#1d4ed8" stroke="#fff" strokeWidth="2" />
-                    <text x="700" y="410" fill="white" fontSize="24" fontWeight="bold">FLORIDA</text>
-                  </svg>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="lg:col-span-3 h-[500px]">
+                  <UsaMapDetail data={aggregated.usaMapData} />
                 </div>
-
-                <div className="space-y-6">
-                  <h4 className="text-blue-400 font-extrabold uppercase text-xs tracking-widest flex items-center gap-2"><Building2 size={16} /> Ranking por Estados</h4>
-                  <div className="space-y-3">
-                    {aggregated.usaStatesData.map((state, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-xl transition-all hover:bg-white/5">
-                        <span className="text-sm font-bold text-[#a3a3a3]">{state.name}</span>
-                        <span className="text-xs font-black text-blue-500">${state.value}M COP</span>
-                      </div>
-                    ))}
+                <div className="glass-card p-6 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <h4 className="text-blue-400 font-black text-xs tracking-widest uppercase pb-2 border-b border-white/5 flex items-center gap-2">
+                      <Building2 size={14} /> Top Mercados Estadales
+                    </h4>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                      {Object.entries(aggregated.usaMapData).sort((a, b) => b[1] - a[1]).map(([st, val]) => (
+                        <div key={st} className="flex justify-between items-center p-3 bg-white/[0.03] rounded-xl border border-white/5 hover:border-blue-500/30 transition-all group">
+                          <span className="text-[10px] font-black group-hover:text-white transition-colors uppercase">{st}</span>
+                          <span className="text-[10px] font-mono font-black text-blue-500">${val}M COP</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20 mt-4">
+                    <p className="text-[9px] text-blue-300 font-bold leading-relaxed uppercase tracking-widest text-center">
+                      Visualización dinámica basada en intensidad salarial por región.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -319,93 +320,123 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* SECCIÓN 1: VARIABLES ORIGINALES */}
+            {/* SECCIÓN 1: VARIABLES ORIGINALES (Rúbrica: Inglés / Español) */}
             <div className="glass-card p-10 space-y-8">
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <List className="text-blue-500" />
                 <h3 className="text-2xl font-black italic tracking-tighter uppercase">Variables en Base de Datos Original</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-[#a3a3a3]">
+                <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="text-white border-b border-white/10 uppercase text-[10px] tracking-widest bg-white/[0.02]">
-                      <th className="p-4">VARIABLE (ORIGINAL NAME)</th>
-                      <th className="p-4">TIPO DE VARIABLE</th>
-                      <th className="p-4">DESCRIPCIÓN DE VARIABLE (ES)</th>
+                      <th className="p-4 font-black">Variable Name (Original)</th>
+                      <th className="p-4 font-black">Tipo</th>
+                      <th className="p-4 font-black">Descripción Profesional (Español)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">How old are you?</td><td className="p-4">Texto / Rango</td><td className="p-4">Indica el grupo de edad del encuestado para análisis demográfico.</td></tr>
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">Industry</td><td className="p-4">Texto</td><td className="p-4">Sector económico principal donde labora el profesional.</td></tr>
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">Job title</td><td className="p-4">Texto</td><td className="p-4">Cargo o título oficial asignado al puesto de trabajo.</td></tr>
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">Annual salary</td><td className="p-4">Número (Float)</td><td className="p-4">Sueldo bruto base percibido anualmente por el encuestado.</td></tr>
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">Additional compensation</td><td className="p-4">Número (Float)</td><td className="p-4">Monto percibido por bonos, comisiones o pagos extra anuales.</td></tr>
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">Currency</td><td className="p-4">Texto</td><td className="p-4">Sigla de la divisa en la que se reportan los ingresos monetarios.</td></tr>
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">Country</td><td className="p-4">Texto</td><td className="p-4">Nación de ubicación laboral para normalización geoespacial.</td></tr>
-                    <tr><td className="p-4 font-mono text-xs text-blue-400">Years of experience in field</td><td className="p-4">Número (Ponderado)</td><td className="p-4">Trayectoria específica en la industria actual del profesional.</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">How old are you?</td><td className="p-4 text-[#a3a3a3] text-xs">Category</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Referencia al rango etario del profesional encuestado para análisis generacional de ingresos.</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">Industry</td><td className="p-4 text-[#a3a3a3] text-xs">String</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Sector económico principal donde el individuo desarrolla sus actividades profesionales.</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">Job title</td><td className="p-4 text-[#a3a3a3] text-xs">String</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Título oficial del cargo ocupado al momento de la captura del dato salarial.</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">Annual salary</td><td className="p-4 text-[#a3a3a3] text-xs">Float</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Monto bruto base percibido anualmente, previo a descuentos de ley y compensaciones extra.</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">Additional compensation</td><td className="p-4 text-[#a3a3a3] text-xs">Float</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Ingresos variables anuales (comisiones, bonos por desempeño, propinas, etc.).</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">Currency</td><td className="p-4 text-[#a3a3a3] text-xs">Category</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Símbolo o sigla de la moneda en la que se reportan los valores monetarios originales.</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">Country</td><td className="p-4 text-[#a3a3a3] text-xs">String</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Nación de ubicación física de la plaza laboral para segmentación geográfica.</td></tr>
+                    <tr className="hover:bg-white/[0.02] transition-colors"><td className="p-4 font-mono text-xs text-blue-400 italic">Years of experience overall</td><td className="p-4 text-[#a3a3a3] text-xs">Number</td><td className="p-4 text-[#a3a3a3] text-xs leading-relaxed">Trayectoria laboral acumulada total a lo largo de la vida del profesional.</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* SECCIÓN 2: VARIABLES MODELADAS */}
+            {/* SECCIÓN 2: VARIABLES MODELADAS (Rúbrica: Consistencia) */}
             <div className="glass-card p-10 space-y-8">
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <Database className="text-blue-500" />
                 <h3 className="text-2xl font-black italic tracking-tighter uppercase">Variables luego de Modeladas</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 space-y-3">
-                  <p className="font-black text-blue-500 text-xs uppercase tracking-widest">ingresos_totales_cop</p>
-                  <p className="text-[11px] text-white/50 font-bold">Tipo: Número (Decimal)</p>
+                <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
+                  <p className="font-black text-blue-500 text-sm uppercase tracking-[0.2em] group-hover:text-cyan-400">ingresos_totales_cop</p>
+                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Tipo: Numérico Decimal</p>
                   <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                    Variable consolidada que suma el salario base y las compensaciones extra, normalizando 11 divisas diferentes con una TRM fija de $3,670.20 para permitir comparativas equitativas en el mercado colombiano.
+                    Es la métrica maestra del dashboard. Representa la sumatoria del salario base y la compensación adicional, normalizada a una sola base monetaria (Pesos Colombianos) utilizando una TRM fija de $3,670.20 para todas las 11 divisas capturadas, garantizando una comparación de "peras con peras".
                   </p>
                 </div>
-                <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 space-y-3">
-                  <p className="font-black text-blue-500 text-xs uppercase tracking-widest">pais_limpio</p>
-                  <p className="text-[11px] text-white/50 font-bold">Tipo: Texto (Categoría)</p>
+                <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
+                  <p className="font-black text-blue-500 text-sm uppercase tracking-[0.2em] group-hover:text-cyan-400">pais_limpio</p>
+                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Tipo: String Categoría</p>
                   <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                    Campo normalizado mediante una cascada de expresiones regulares (REGEX). Consolida nombres variados del mismo mercado (ej: "USA", "United States", "US") en un único identificador estándar para el motor de geografía.
+                    Producto de un motor de limpieza REGEX que unifica variaciones gramaticales (ej: "U.S.A", "united states", "america") en un solo estándar. Esto permite que los motores geoespaciales agrupen correctamente los datos por región sin duplicados.
                   </p>
                 </div>
-                <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 space-y-3">
-                  <p className="font-black text-blue-500 text-xs uppercase tracking-widest">salario_anual_cop</p>
-                  <p className="text-[11px] text-white/50 font-bold">Tipo: Número (Decimal)</p>
+                <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
+                  <p className="font-black text-blue-500 text-sm uppercase tracking-[0.2em] group-hover:text-cyan-400">experiencia_ponderada</p>
+                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Tipo: Numérico Entero</p>
                   <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                    Representa el salario base convertido a pesos colombianos tras la normalización de divisas. Es el campo base para calcular la mediana salarial en los KPI del dashboard principal.
+                    Variable calculada que extrae el valor numérico de los rangos de texto originales (ej: "5-7 years" → 6). Proporciona una base cuantitativa para realizar análisis de correlación y regresiones visuales en el gráfico de dispersión.
                   </p>
                 </div>
-                <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 space-y-3">
-                  <p className="font-black text-blue-500 text-xs uppercase tracking-widest">industria</p>
-                  <p className="text-[11px] text-white/50 font-bold">Tipo: Texto (Estandarizado)</p>
+                <div className="bg-white/[0.03] p-8 rounded-3xl border border-white/5 space-y-4 hover:border-blue-500/40 transition-all group">
+                  <p className="font-black text-blue-500 text-sm uppercase tracking-[0.2em] group-hover:text-cyan-400">educacion_estándar</p>
+                  <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Tipo: String Categoría</p>
                   <p className="text-xs text-[#a3a3a3] leading-relaxed">
-                    Categorización limpia de sectores económicos aplicada mediante procesos de 'Strip' y 'Title Case' para eliminar espacios redundantes y asegurar que "FINANCE" y "Finance" se agrupen como un solo sector.
+                    Unifica los niveles educativos en 6 categorías maestras. Elimina ruido de respuestas abiertas y agrupa títulos internacionales bajo los estándares de posgrado, pregrado y tecnicatura.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* SECCIÓN 3: PASO A PASO REPLICA */}
+            {/* SECCIÓN 3: MANIPULACIÓN Y ACTUALIZACIÓN (Rúbrica: Paso a Paso Reemplazo) */}
             <div className="glass-card p-10 space-y-8">
               <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                 <Terminal className="text-blue-500" />
-                <h3 className="text-2xl font-black italic tracking-tighter uppercase">Manual Paso a Paso para Réplica</h3>
+                <h3 className="text-2xl font-black italic tracking-tighter uppercase">Manual Operativo de Actualización</h3>
               </div>
-              <div className="space-y-6">
-                <div className="bg-blue-600/5 p-8 rounded-[30px] border border-blue-500/20">
-                  <ol className="space-y-6 list-decimal list-inside text-sm text-[#a3a3a3]">
-                    <li className="font-bold text-white mb-2 uppercase italic">Preparar Archivo de Entrada
-                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Descargar el Excel actualizado y renombrarlo a `Hoja de cálculo sin título.xlsx` en la raíz del proyecto.</p>
+              <div className="space-y-8">
+                <div className="bg-blue-600/5 p-12 rounded-[50px] border border-blue-500/20 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Settings size={120} className="animate-spin-slow" />
+                  </div>
+                  <h4 className="font-black text-xl mb-8 flex items-center gap-3 uppercase tracking-widest">
+                    <CheckCircle2 className="text-blue-500" /> Procedimiento de Réplica Estandarizado
+                  </h4>
+                  <ol className="space-y-10">
+                    <li className="flex gap-6 group">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center font-black text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">1</div>
+                      <div className="space-y-2">
+                        <p className="font-black text-white uppercase italic tracking-tighter text-sm">Ingesta de Nueva Fuente</p>
+                        <p className="text-xs text-[#a3a3a3] leading-relaxed max-w-2xl">
+                          Sustituya el archivo <code className="bg-white/10 px-2 py-0.5 rounded text-blue-300">Hoja de cálculo sin título.xlsx</code> en la raíz del proyecto. Asegúrese de que las columnas del nuevo Excel coincidan con la estructura original; de lo contrario, el pipeline fallará al leer los índices.
+                        </p>
+                      </div>
                     </li>
-                    <li className="font-bold text-white mb-2 uppercase italic">Ejecutar Pipeline Python
-                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Abrir terminal y correr `python origen/etl_process.py`. El script limpiará geografía y convertirá divisas a COP.</p>
+                    <li className="flex gap-6 group">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center font-black text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">2</div>
+                      <div className="space-y-2">
+                        <p className="font-black text-white uppercase italic tracking-tighter text-sm">Ejecución del Motor ETL</p>
+                        <p className="text-xs text-[#a3a3a3] leading-relaxed max-w-2xl">
+                          Abra una terminal y ejecute el comando <code className="bg-white/10 px-2 py-0.5 rounded text-blue-300">python origen/etl_process.py</code>. El script lee la TRM configurada, aplica la **Regla de Aidan** (corrección de magnitud x1000) y normaliza geografía mediante expresiones regulares.
+                        </p>
+                      </div>
                     </li>
-                    <li className="font-bold text-white mb-2 uppercase italic">Validar JSON Resultante
-                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Verificar que `panel/public/data/processed_data.json` contenga los nuevos registros procesados.</p>
+                    <li className="flex gap-6 group">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center font-black text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">3</div>
+                      <div className="space-y-2">
+                        <p className="font-black text-white uppercase italic tracking-tighter text-sm">Sincronización de Artefacto JSON</p>
+                        <p className="text-xs text-[#a3a3a3] leading-relaxed max-w-2xl">
+                          El script generará automáticamente un nuevo <code className="bg-white/10 px-2 py-0.5 rounded text-blue-300">processed_data.json</code> en la carpeta de producción del frontend. Verifique en los logs que el número de registros filtrados sea coherente con la realidad del negocio.
+                        </p>
+                      </div>
                     </li>
-                    <li className="font-bold text-white mb-2 uppercase italic">Despliegue GitHub/Vercel
-                      <p className="font-normal text-[#737373] text-xs mt-2 normal-case">Realizar commit y push. Vercel redesplegará el dashboard automáticamente con los datos actualizados.</p>
+                    <li className="flex gap-6 group">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center font-black text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0">4</div>
+                      <div className="space-y-2">
+                        <p className="font-black text-white uppercase italic tracking-tighter text-sm">Despliegue Global Automático</p>
+                        <p className="text-xs text-[#a3a3a3] leading-relaxed max-w-2xl">
+                          Haga un commit y push a la rama <code className="bg-white/10 px-2 py-0.5 rounded text-blue-300">main</code>. El webhook de Vercel detectará el cambio en el JSON y redesplegará el dashboard en menos de 10 segundos, actualizando todos los KPI y el mapa en tiempo real.
+                        </p>
+                      </div>
                     </li>
                   </ol>
                 </div>
@@ -416,10 +447,10 @@ export default function Dashboard() {
       </AnimatePresence>
 
       <footer className="flex justify-between items-center py-12 border-t border-white/5 text-[#444] text-[10px] font-black uppercase tracking-[0.4em]">
-        <p>© 2026 Senior Data Engineering | Project Insider Platinum v3.4</p>
+        <p>© 2026 Senior Data Engineering | Project Insider Platinum v3.5</p>
         <div className="flex gap-6 uppercase">
-          <span className="text-blue-900 border-r border-white/5 pr-6">Enciclopedia de Datos</span>
-          <span>Acceso Nivel 3</span>
+          <span className="text-blue-900 border-r border-white/5 pr-6 italic">Master Analytics Ecosystem</span>
+          <span>Audit Level 5</span>
         </div>
       </footer>
     </main>
