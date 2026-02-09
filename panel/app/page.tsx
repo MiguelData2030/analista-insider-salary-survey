@@ -143,18 +143,25 @@ export default function Dashboard() {
       industry: x.industria
     }));
 
-    // Group by City for TreeMap Global
+    // Group by City for TreeMap Global (Corrected Grouping)
     const cityGroup: Record<string, { sum: number, count: number }> = {};
     data.forEach(x => {
-      const city = x.ciudad_limpia || "Other";
-      if (city === "Unknown" || city === "N/A") return;
+      const city = x.ciudad_limpia?.trim();
+      if (!city || city === "Unknown" || city === "N/A" || city === "" || city === "Other") return;
+
       if (!cityGroup[city]) cityGroup[city] = { sum: 0, count: 0 };
       cityGroup[city].sum += (Number(x.ingresos_totales_cop) || 0);
       cityGroup[city].count += 1;
     });
+
     const treeMapData = Object.entries(cityGroup)
-      .map(([name, stat]) => ({ name, value: Math.round((stat.sum / stat.count) / 1e6) }))
-      .sort((a, b) => b.value - a.value).slice(0, 40);
+      .map(([name, stat]) => ({
+        name,
+        value: Math.round((stat.sum / stat.count) / 1e6)
+      }))
+      .filter(x => x.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 30); // Top 30 ciudades para no saturar visualmente
 
     return {
       stats: { total, avgSalary: avg / 1e6, topIndustry: industries[0]?.name || 'N/A' },
