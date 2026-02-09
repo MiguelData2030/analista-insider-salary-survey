@@ -8,6 +8,7 @@ interface TreeMapProps {
     data: Array<{
         name: string;
         value: number;
+        count: number;
         children?: any[];
     }>;
 }
@@ -15,7 +16,7 @@ interface TreeMapProps {
 const COLORS = ['#1e3a8a', '#1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
 const CustomizedContent = (props: any) => {
-    const { x, y, width, height, index, name } = props;
+    const { x, y, width, height, index, name, count } = props;
 
     return (
         <g>
@@ -26,23 +27,36 @@ const CustomizedContent = (props: any) => {
                 height={height}
                 style={{
                     fill: COLORS[index % COLORS.length],
-                    stroke: '#000',
-                    strokeWidth: 2,
-                    strokeOpacity: 0.1,
+                    stroke: '#050505',
+                    strokeWidth: 3,
+                    strokeOpacity: 0.8,
                 }}
             />
-            {width > 60 && height > 30 && (
+            {width > 80 && height > 40 && (
                 <text
                     x={x + width / 2}
-                    y={y + height / 2}
+                    y={y + height / 2 - 5}
                     textAnchor="middle"
                     fill="#fff"
-                    fontSize={10}
+                    fontSize={width > 150 ? 14 : 11}
                     fontWeight="900"
-                    className="uppercase tracking-tighter"
-                    style={{ pointerEvents: 'none', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.5))' }}
+                    className="uppercase tracking-widest pointer-events-none"
+                    style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.8)' }}
                 >
                     {name}
+                </text>
+            )}
+            {width > 80 && height > 60 && (
+                <text
+                    x={x + width / 2}
+                    y={y + height / 2 + 15}
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.7)"
+                    fontSize={9}
+                    fontWeight="bold"
+                    className="pointer-events-none font-mono"
+                >
+                    N={count} PERS
                 </text>
             )}
         </g>
@@ -51,15 +65,23 @@ const CustomizedContent = (props: any) => {
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-        const data = payload[0].payload;
+        const d = payload[0].payload;
         return (
-            <div className="bg-white border-2 border-blue-500 p-4 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-                <p className="text-black font-black mb-1 text-xs uppercase tracking-widest">{data.name}</p>
-                <div className="flex justify-between gap-6 items-center border-t border-gray-100 pt-1">
-                    <span className="text-gray-500 text-[10px] font-bold uppercase">Ingreso Promedio:</span>
-                    <span className="text-blue-700 font-black text-xs">${data.value.toLocaleString()}M COP</span>
+            <div className="bg-white border-2 border-blue-600 p-5 rounded-2xl shadow-[0_10px_30px_rgba(37,99,235,0.4)]">
+                <p className="text-black font-black mb-3 text-sm uppercase tracking-[0.2em] border-b border-gray-100 pb-2">{d.name}</p>
+                <div className="space-y-3">
+                    <div className="flex justify-between gap-10 items-center">
+                        <span className="text-gray-400 text-[10px] font-black uppercase">Ingreso Promedio:</span>
+                        <span className="text-blue-700 font-black text-sm">${d.value.toLocaleString()}M COP</span>
+                    </div>
+                    <div className="flex justify-between gap-10 items-center">
+                        <span className="text-gray-400 text-[10px] font-black uppercase">Muestra Total:</span>
+                        <span className="text-gray-800 font-bold text-xs">{d.count} Profesionales</span>
+                    </div>
                 </div>
-                <p className="text-[8px] text-gray-400 mt-2 italic">* Valor proporcional en el mercado global</p>
+                <p className="text-[9px] text-blue-500 mt-4 font-bold border-t border-gray-50 pt-2 italic tracking-tight">
+                    * Validez estadística nivel Senior
+                </p>
             </div>
         );
     }

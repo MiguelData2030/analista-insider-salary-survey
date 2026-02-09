@@ -157,11 +157,12 @@ export default function Dashboard() {
     const treeMapData = Object.entries(cityGroup)
       .map(([name, stat]) => ({
         name,
-        value: Math.round((stat.sum / stat.count) / 1e6)
+        value: Math.round((stat.sum / stat.count) / 1e6),
+        count: stat.count
       }))
       .filter(x => x.value > 0)
       .sort((a, b) => b.value - a.value)
-      .slice(0, 30); // Top 30 ciudades para no saturar visualmente
+      .slice(0, 10); // Top 10 para máxima legibilidad Premium
 
     return {
       stats: { total, avgSalary: avg / 1e6, topIndustry: industries[0]?.name || 'N/A' },
