@@ -5,7 +5,7 @@ import {
   Users, DollarSign, Briefcase, TrendingUp, Info, List,
   Database, ShieldAlert, Rocket, GraduationCap, Clock,
   ArrowRightLeft, FileText, Settings, HeartPulse, PieChart as PieIcon,
-  CheckCircle2, AlertCircle, Terminal, BookOpen, Map as MapIcon, Globe, City
+  CheckCircle2, AlertCircle, Terminal, BookOpen, Map as MapIcon, Globe, Building2
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -346,7 +346,7 @@ export default function Dashboard() {
 
                 {/* Explosión por Ciudades */}
                 <div className="space-y-6">
-                  <h4 className="text-blue-400 font-black uppercase text-xs tracking-[0.3em] flex items-center gap-2"><City size={16} /> Explorador de Ciudades</h4>
+                  <h4 className="text-blue-400 font-black uppercase text-xs tracking-[0.3em] flex items-center gap-2"><Building2 size={16} /> Explorador de Ciudades</h4>
                   <div className="space-y-3">
                     {aggregated.cityData.map((city, idx) => (
                       <motion.div
